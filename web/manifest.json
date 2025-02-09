@@ -1,6 +1,6 @@
 {
-    "name": "test_app",
-    "short_name": "test_app",
+    "name": "virtual_fitting_room",
+    "short_name": "virtual_fitting_room",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
