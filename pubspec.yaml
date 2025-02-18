@@ -14,7 +14,8 @@ dependencies:
 
   english_words: ^4.0.0
   provider: ^6.1.2
-  image_picker: ^0.8.5+3 #this is for image use
+  image_picker: ^1.1.2 #this is for image use
+  url_launcher: ^6.0.12 #for url launching
 
 dev_dependencies:
   flutter_test:
