@@ -4,7 +4,7 @@ import 'package:url_launcher/url_launcher.dart'; //for url launching, change dep
 class ContactScreen extends StatelessWidget{
   const ContactScreen({super.key});
 
-  /*this is used to launch the url if pressed. go into the AndroidManifest xml to add internet permissions
+  //this is used to launch the url if pressed. go into the AndroidManifest xml to add internet permissions
   void _launchURL(Uri url) async{
     if(await canLaunchUrl(url)){
       await launchUrl(url);
@@ -12,7 +12,7 @@ class ContactScreen extends StatelessWidget{
       throw 'Unable to launch $url';
     }
   }
-  */
+  
 
   @override
   Widget build(BuildContext context){
@@ -27,10 +27,10 @@ class ContactScreen extends StatelessWidget{
               SizedBox(height: 10),
               Text('Call us at: (508) 612-2688', style: TextStyle(fontSize: 18)),
               SizedBox(height: 10),
-              //GestureDetector(
-                //onTap: () => _launchURL(Uri.parse('https://www.merianbrothers.com/')),
-                //child: Text('Check out our Website!', style: TextStyle(fontSize: 18, color: Colors.blue, decoration: TextDecoration.underline)),
-              //),
+              GestureDetector(
+                onTap: () => _launchURL(Uri.parse('https://www.merianbrothers.com/')),
+                child: Text('Check out our Website!', style: TextStyle(fontSize: 18, color: Colors.blue, decoration: TextDecoration.underline)),
+              ),
             ],
           ),
         ),
