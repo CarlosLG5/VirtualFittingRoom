@@ -3,6 +3,8 @@ import 'contact.dart'; //imports our contact screen
 import 'package:image_picker/image_picker.dart'; //allows for use of images
 import 'dart:io'; //allows for input/output file use
 
+
+
 class HomeScreen extends StatefulWidget{
   const HomeScreen({Key? key}) : super(key : key);
 
@@ -32,6 +34,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         _image = File(pickedFile.path);
       });
     }
+  }
+
+  //image camera utility
+  Future<void> _captureImageFromCamera() async{
+    final PickedFile = await _picker.pickImage(source: ImageSource.camera);
+
+    setState(() {
+      _image = File(PickedFile!.path);
+    });
+
   }
 
   @override
@@ -74,6 +86,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             onPressed: _pickImage,
             child: Text('Pick Image'),
           ),
+          ElevatedButton(onPressed: _captureImageFromCamera , child: Text('Camera'),)
         ],
       ),
     );
