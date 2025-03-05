@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'contact.dart'; //imports our contact screen
 import 'package:image_picker/image_picker.dart'; //allows for use of images
 import 'dart:io'; //allows for input/output file use
+import 'package:camera/camera.dart';
 
+late List<CameraDescription> _cameras;
 
 
 class HomeScreen extends StatefulWidget{
@@ -86,7 +88,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             onPressed: _pickImage,
             child: Text('Pick Image'),
           ),
-          ElevatedButton(onPressed: _captureImageFromCamera , child: Text('Camera'),)
+          ElevatedButton(onPressed: _captureImageFromCamera , child: Text('Camera'),),
+          ElevatedButton(onPressed: (){
+            print(_heightController.value);
+            print(_weightController.value);
+          }, child: Text('Enter Data'))
         ],
       ),
     );
