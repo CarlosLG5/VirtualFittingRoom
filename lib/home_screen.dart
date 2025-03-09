@@ -22,6 +22,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   File? _image;
   final ImagePicker _picker = ImagePicker(); //image input
 
+String _suitSize=""; //store suit size
+ bool _dataEntered = false; //track if data entered
+
   @override
   void initState() {
     super.initState();
@@ -48,6 +51,17 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   }
 
+  //method to calculate suit size(for algorithm)
+  String _calculateSuitSize(double height, double weight){
+    if(height<160){
+      return 'Small';
+    }else if (height>=160&&height<175){
+      return 'Medium';
+    }else{
+      return 'Large';
+    }
+  }
+
   @override
   void dispose(){
     _tabController.dispose();
@@ -56,51 +70,108 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     super.dispose();
   }
   //create widget for info input
-  Widget _buildFittingRoomTab(){
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextFormField(
-              controller: _heightController,
-              decoration: InputDecoration(
-                labelText: 'Enter your height in inches',
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.number,
+  Widget _buildFittingRoomTab() {
+  return SingleChildScrollView(
+    child: Column(
+      children: [
+      if(!_dataEntered) ...[
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: TextFormField(
+            controller: _heightController,
+            decoration: InputDecoration(
+              labelText: 'Enter your height in inches',
+              border: OutlineInputBorder(),
             ),
+            keyboardType: TextInputType.number,
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextFormField(
-              controller: _weightController,
-              decoration: InputDecoration(
-                labelText: 'Enter your weight in lbs',
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.number,
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: TextFormField(
+            controller: _weightController,
+            decoration: InputDecoration(
+              labelText: 'Enter your weight in lbs',
+              border: OutlineInputBorder(),
             ),
+            keyboardType: TextInputType.number,
           ),
-          SizedBox(height: 10),
-          _image != null ? Image.file(_image!) : Text("Image not selected"),
-          ElevatedButton(
-            onPressed: _pickImage,
-            child: Text('Pick Image'),
+        ),
+        SizedBox(height: 10),
+        _image != null 
+          ? Image.file(_image!) 
+          : Text("Image not selected"),
+        ElevatedButton(
+          onPressed: _pickImage,
+          child: Text('Pick Image'),
+        ),
+        ElevatedButton(
+          onPressed: _captureImageFromCamera,
+          child: Text('Camera'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            double height = double.tryParse(_heightController.text) ?? 0;
+            double weight = double.tryParse(_weightController.text) ?? 0;
+            String calculatedSuitSize = _calculateSuitSize(height, weight);
+            setState(() {
+              _suitSize = calculatedSuitSize;
+              _dataEntered = true;
+            });
+          },
+          child: Text('Enter Data'),
+        ),
+      ],
+
+        // When data is entered, display the results
+        if (_dataEntered) 
+          Column(
+            children: [
+              SizedBox(height: 10),
+              Text(
+                'Height: ${_heightController.text} inches',
+                style: TextStyle(fontSize: 16),
+              ),
+              Text(
+                'Weight: ${_weightController.text} lbs',
+                style: TextStyle(fontSize: 16),
+              ),
+              SizedBox(height: 10),
+              _suitSize.isNotEmpty
+                  ? Text(
+                      'Predicted Suit Size: $_suitSize',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    )
+                  : SizedBox.shrink(),
+              SizedBox(height: 10),
+              _image != null
+                  ? Image.file(
+                      _image!,
+                      width: 150, // Make image smaller
+                      height: 150, // Make image smaller
+                      fit: BoxFit.cover,
+                    )
+                  : Text("No image selected"),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    _dataEntered = false;
+                    _heightController.clear();
+                    _weightController.clear();
+                    _suitSize = "";
+                    _image = null;
+                  });
+                },
+                child: Text('Enter New Data'),
+              ),
+            ],
           ),
-          ElevatedButton(onPressed: _captureImageFromCamera , child: Text('Camera'),),
-          ElevatedButton(onPressed: (){
-            print(_heightController.value);
-            print(_weightController.value);
-          }, child: Text('Enter Data'))
-        ],
-      ),
-    );
-
-
-
-  }
-
+      ],
+    ),
+  );
+}
+        
   @override
   Widget build(BuildContext context){
     return Scaffold(
