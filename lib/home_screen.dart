@@ -7,6 +7,9 @@ import 'package:camera/camera.dart';
 late List<CameraDescription> _cameras;
 
 
+
+
+
 class HomeScreen extends StatefulWidget{
   const HomeScreen({Key? key}) : super(key : key);
 
@@ -21,15 +24,37 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   final TextEditingController _weightController = TextEditingController(); //weight input
   File? _image;
   final ImagePicker _picker = ImagePicker(); //image input
-
-String _suitSize=""; //store suit size
- bool _dataEntered = false; //track if data entered
+  String _suitSize=""; //store suit size
+  bool _dataEntered = false; //track if data entered
+  CameraController? _cameraController;
+  bool _isCameraInitialized = false;
+  
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _initializeCamera();
+    
   }
+
+  //Initialize the camera
+
+  Future<void> _initializeCamera() async {
+    if (_cameras.isNotEmpty) {
+      _cameraController = CameraController(_cameras[0], ResolutionPreset.medium);
+      await _cameraController!.initialize();
+      if (mounted) {
+        setState(() {
+          _isCameraInitialized = true;
+        });
+      }
+    }
+  }
+
+
+
+  
 
   //image importing from user
   Future<void> _pickImage() async{
@@ -41,15 +66,32 @@ String _suitSize=""; //store suit size
     }
   }
 
-  //image camera utility
-  Future<void> _captureImageFromCamera() async{
-    final PickedFile = await _picker.pickImage(source: ImageSource.camera);
-
-    setState(() {
-      _image = File(PickedFile!.path);
-    });
-
+  // Capture Image using Camera
+  Future<void> _captureImageFromCamera() async {
+    if (_cameraController == null || !_cameraController!.value.isInitialized) {
+      return;
+    }
+    try {
+      final XFile imageFile = await _cameraController!.takePicture();
+      setState(() {
+        _image = File(imageFile.path);
+      });
+    } catch (e) {
+      print("Error capturing image: $e");
+    }
   }
+  
+ 
+
+  //image camera utility
+  //Future<void> _captureImageFromCamera() async{
+    //final PickedFile = await _picker.pickImage(source: ImageSource.camera);
+
+    //setState(() {
+      //_image = File(PickedFile!.path);
+    //});
+
+  //}
 
   //method to calculate suit size(for algorithm)
   String _calculateSuitSize(double height, double weight){
@@ -67,6 +109,7 @@ String _suitSize=""; //store suit size
     _tabController.dispose();
     _heightController.dispose();
     _weightController.dispose();
+    _cameraController?.dispose();
     super.dispose();
   }
   //create widget for info input
