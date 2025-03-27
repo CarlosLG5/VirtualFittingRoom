@@ -5,6 +5,9 @@
       location = "group:Runner.xcodeproj">
    </FileRef>
    <FileRef
+      location = "absolute:/Users/carloslazcano/Documents/GitHub/VirtualFittingRoom/ios/Pods/Pods.xcodeproj">
+   </FileRef>
+   <FileRef
       location = "group:Pods/Pods.xcodeproj">
    </FileRef>
 </Workspace>

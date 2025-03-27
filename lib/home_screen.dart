@@ -97,6 +97,36 @@ String _suitSize=""; //store suit size
             keyboardType: TextInputType.number,
           ),
         ),
+
+        // Body Type Selection Buttons
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Column(
+              children: [
+                Text(
+                  "Select Body Type:",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                Wrap(
+                  spacing: 8,
+                  children: ['Skinny', 'Average', 'Athletic', 'Larger']
+                      .map((type) => ChoiceChip(
+                            label: Text(type),
+                            selected: selectedBodyType == type,
+                            onSelected: (selected) {
+                              setState(() {
+                                selectedBodyType = type;
+                              });
+                            },
+                          ))
+                      .toList(),
+                ),
+              ],
+            ),
+          ),
+
+
+
         SizedBox(height: 10),
         _image != null 
           ? Image.file(_image!) 
@@ -171,10 +201,12 @@ String _suitSize=""; //store suit size
     ),
   );
 }
-        
+  // Buttons for body type
+  String selectedBodyType = 'None selected';
   @override
   Widget build(BuildContext context){
     return Scaffold(
+      
       appBar: AppBar(
         title: const Text(
           'Virtual Fitting Room',
@@ -202,6 +234,9 @@ String _suitSize=""; //store suit size
           ContactScreen(),
         ],
       ),
+      
+
+    
       backgroundColor: Colors.white,
     );
   }
