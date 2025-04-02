@@ -103,9 +103,12 @@ String _suitSize=""; //store suit size
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: Column(
               children: [
+                Center(
+                child:
                 Text(
                   "Select Body Type:",
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
                 ),
                 Wrap(
                   spacing: 8,
@@ -131,11 +134,15 @@ Padding(
   child: Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(
+      Center (
+        child: Text(
         "Select Body Shape:",
         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
+      ),
       SizedBox(height: 8), // optional spacing
+      Center(
+      child:
       Column(
         children: ['Slim', 
           'Small Chest/Large Waist', 
@@ -155,6 +162,7 @@ Padding(
                   ),
                 ))
             .toList(),
+      ),
       ),
     ],
   ),
