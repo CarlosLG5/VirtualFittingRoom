@@ -111,11 +111,11 @@ String _suitSize=""; //store suit size
                   spacing: 8,
                   children: ['Skinny', 'Average', 'Athletic', 'Larger']
                       .map((type) => ChoiceChip(
-                            label: Text(type),
+                            label: Text(type, style: TextStyle(color: Colors.black)),
                             selected: selectedBodyType == type,
                             onSelected: (selected) {
                               setState(() {
-                                selectedBodyType = type;
+                                selectedBodyType = selected ? type: '';
                               });
                             },
                           ))
@@ -125,19 +125,58 @@ String _suitSize=""; //store suit size
             ),
           ),
 
+          // Body Shape Selection Buttons
+Padding(
+  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        "Select Body Shape:",
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      ),
+      SizedBox(height: 8), // optional spacing
+      Column(
+        children: ['Slim', 
+          'Small Chest/Large Waist', 
+          'Large Chest/Small Waist', 
+          'Large Chest/Large Waist']
+            .map((type) => Padding(
+              //Buttons are wrapped vertically for better presentation
+                  padding: const EdgeInsets.symmetric(vertical: 4.0), 
+                  child: ChoiceChip(
+                    label: Text(type, style: TextStyle(color: Colors.black)),
+                    selected: selectedBodyShape == type,
+                    onSelected: (selected) {
+                      setState(() {
+                        selectedBodyShape = selected ? type : '';
+                      });
+                    },
+                  ),
+                ))
+            .toList(),
+      ),
+    ],
+  ),
+),
+
+
 
 
         SizedBox(height: 10),
         _image != null 
           ? Image.file(_image!) 
-          : Text("Image not selected"),
+          : Text("Image not selected",
+          style: TextStyle(color:Colors.black)),
         ElevatedButton(
           onPressed: _pickImage,
-          child: Text('Pick Image'),
+          child: Text('Pick Image',
+          style: TextStyle(color: Colors.black)), 
         ),
         ElevatedButton(
           onPressed: _captureImageFromCamera,
-          child: Text('Camera'),
+          child: Text('Camera',
+          style: TextStyle(color: Colors.black)),
         ),
         ElevatedButton(
           onPressed: () {
@@ -149,7 +188,8 @@ String _suitSize=""; //store suit size
               _dataEntered = true;
             });
           },
-          child: Text('Enter Data'),
+          child: Text('Enter Data',
+          style: TextStyle(color: Colors.black)),
         ),
       ],
 
@@ -166,6 +206,8 @@ String _suitSize=""; //store suit size
                 'Weight: ${_weightController.text} lbs',
                 style: TextStyle(fontSize: 16),
               ),
+              Text('Body Type: $selectedBodyType', style: TextStyle(fontSize: 16)),
+              Text('Body Shape: $selectedBodyShape', style: TextStyle(fontSize: 16)),
               SizedBox(height: 10),
               _suitSize.isNotEmpty
                   ? Text(
@@ -191,6 +233,8 @@ String _suitSize=""; //store suit size
                     _weightController.clear();
                     _suitSize = "";
                     _image = null;
+                    selectedBodyType = '';
+                    selectedBodyShape = '';
                   });
                 },
                 child: Text('Enter New Data'),
@@ -202,7 +246,9 @@ String _suitSize=""; //store suit size
   );
 }
   // Buttons for body type
-  String selectedBodyType = 'None selected';
+  String selectedBodyType = '';
+  String selectedBodyShape= '';
+
   @override
   Widget build(BuildContext context){
     return Scaffold(
