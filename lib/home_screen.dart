@@ -3,6 +3,9 @@ import 'contact.dart'; //imports our contact screen
 import 'package:image_picker/image_picker.dart'; //allows for use of images
 import 'dart:io'; //allows for input/output file use
 import 'package:camera/camera.dart';
+import 'package:onnxruntime/onnxruntime.dart'; //onnx interpreter
+import 'package:flutter/services.dart'; //rootBundle use
+import 'package:image/image.dart' as img;
 
 late List<CameraDescription> _cameras;
 
@@ -62,6 +65,90 @@ String _suitSize=""; //store suit size
     }
   }
 
+int encodeBodyType(String bodyType) {
+  const Map<String, int> bodyTypeMap = {
+    'Skinny': 0,
+    'Average': 1,
+    'Athletic': 2,
+    'Larger': 3
+  };
+  return bodyTypeMap[bodyType] ?? -1; // Returns -1 if bodyType is not found
+}
+
+int encodeBodyShape(String bodyShape) {
+  const Map<String, int> bodyShapeMap = {
+    'Slim': 0,
+    'Small Chest/Large Waist': 1,
+    'Large Chest/Small Waist': 2,
+    'Large Chest/Large Waist': 3
+  };
+  return bodyShapeMap[bodyShape] ?? -1; // Returns -1 if bodyShape is not found
+}
+
+Future<List<double>> extractImageFeatures(File? imageFile) async {
+  // Load the image
+  img.Image image = img.decodeImage(await imageFile!.readAsBytes())!;
+  // Resize the image to a fixed size (e.g., 28x28 for simplicity)
+  img.Image resized = img.copyResize(image, width: 28, height: 28);
+  // Convert the image to grayscale and normalize pixel values
+  List<double> imageFeatures = [];
+  for (var pixel in resized.data) {
+    final grayScaleValue = (img.getRed(pixel) + img.getGreen(pixel) + img.getBlue(pixel)) / 3 / 255;
+    imageFeatures.add(grayScaleValue);
+  }
+  return imageFeatures;
+}
+
+
+
+Future<Object?> predictSize() async{
+  try{
+    //load the model
+    OrtEnv.instance.init();
+    print('ONNX Runtime environment initialized');
+    final options = OrtSessionOptions();
+    final model = await rootBundle.load('assets/model.onnx');
+    print("loaded model"); //check that model loads
+    final session = OrtSession.fromBuffer(model.buffer.asUint8List(), options);
+    final runOptions = OrtRunOptions();
+    print('ONNX session created successfully.');
+    //variables
+    final image = _image;
+    final double height = double.parse(_heightController.text);
+    final double weight = double.parse(_weightController.text);
+    final bodyType = encodeBodyType(selectedBodyType);
+    final bodyShape = encodeBodyShape(selectedBodyShape);
+    final imageFeatures = await extractImageFeatures(_image);
+    print('Inputs success');
+
+    //final inputs
+    final List<double> inputs = [
+      height,
+      weight,
+      ...imageFeatures,
+      bodyType.toDouble(),
+      bodyShape.toDouble(),
+    ];
+
+    final Map<String, List<List<double>>> inputData = {
+        'inputs': [inputs] 
+    };
+
+    final result = await session.run(runOptions, inputData.cast<String, OrtValue>());
+
+    final predictedSuitSize = result[0];
+    setState((){
+      _suitSize = predictedSuitSize.toString();
+    });
+    return predictedSuitSize;
+  }catch(e, stackTrace){
+    print("error predicting size");
+    print('stack trace: $stackTrace');
+    return('Error predicting size');
+  }
+  
+}
+
   @override
   void dispose(){
     _tabController.dispose();
@@ -103,19 +190,22 @@ String _suitSize=""; //store suit size
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: Column(
               children: [
+                Center(
+                child:
                 Text(
                   "Select Body Type:",
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
                 ),
                 Wrap(
                   spacing: 8,
                   children: ['Skinny', 'Average', 'Athletic', 'Larger']
                       .map((type) => ChoiceChip(
-                            label: Text(type),
+                            label: Text(type, style: TextStyle(color: Colors.black)),
                             selected: selectedBodyType == type,
                             onSelected: (selected) {
                               setState(() {
-                                selectedBodyType = type;
+                                selectedBodyType = selected ? type: '';
                               });
                             },
                           ))
@@ -125,31 +215,76 @@ String _suitSize=""; //store suit size
             ),
           ),
 
+          // Body Shape Selection Buttons
+Padding(
+  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Center (
+        child: Text(
+        "Select Body Shape:",
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      ),
+      ),
+      SizedBox(height: 8), // optional spacing
+      Center(
+      child:
+      Column(
+        children: ['Slim', 
+          'Small Chest/Large Waist', 
+          'Large Chest/Small Waist', 
+          'Large Chest/Large Waist']
+            .map((type) => Padding(
+              //Buttons are wrapped vertically for better presentation
+                  padding: const EdgeInsets.symmetric(vertical: 4.0), 
+                  child: ChoiceChip(
+                    label: Text(type, style: TextStyle(color: Colors.black)),
+                    selected: selectedBodyShape == type,
+                    onSelected: (selected) {
+                      setState(() {
+                        selectedBodyShape = selected ? type : '';
+                      });
+                    },
+                  ),
+                ))
+            .toList(),
+      ),
+      ),
+    ],
+  ),
+),
+
+
 
 
         SizedBox(height: 10),
         _image != null 
           ? Image.file(_image!) 
-          : Text("Image not selected"),
+          : Text("Image not selected",
+          style: TextStyle(color:Colors.black)),
         ElevatedButton(
           onPressed: _pickImage,
-          child: Text('Pick Image'),
+          child: Text('Pick Image',
+          style: TextStyle(color: Colors.black)), 
         ),
         ElevatedButton(
           onPressed: _captureImageFromCamera,
-          child: Text('Camera'),
+          child: Text('Camera',
+          style: TextStyle(color: Colors.black)),
         ),
         ElevatedButton(
-          onPressed: () {
+          onPressed: () async {
             double height = double.tryParse(_heightController.text) ?? 0;
             double weight = double.tryParse(_weightController.text) ?? 0;
-            String calculatedSuitSize = _calculateSuitSize(height, weight);
+            String? suitSize = (await predictSize()) as String?;
             setState(() {
-              _suitSize = calculatedSuitSize;
+              _suitSize = suitSize!;
               _dataEntered = true;
             });
           },
-          child: Text('Enter Data'),
+          child: Text('Enter Data',
+          style: TextStyle(color: Colors.black)),
         ),
       ],
 
@@ -166,6 +301,8 @@ String _suitSize=""; //store suit size
                 'Weight: ${_weightController.text} lbs',
                 style: TextStyle(fontSize: 16),
               ),
+              Text('Body Type: $selectedBodyType', style: TextStyle(fontSize: 16)),
+              Text('Body Shape: $selectedBodyShape', style: TextStyle(fontSize: 16)),
               SizedBox(height: 10),
               _suitSize.isNotEmpty
                   ? Text(
@@ -191,6 +328,8 @@ String _suitSize=""; //store suit size
                     _weightController.clear();
                     _suitSize = "";
                     _image = null;
+                    selectedBodyType = '';
+                    selectedBodyShape = '';
                   });
                 },
                 child: Text('Enter New Data'),
@@ -202,7 +341,9 @@ String _suitSize=""; //store suit size
   );
 }
   // Buttons for body type
-  String selectedBodyType = 'None selected';
+  String selectedBodyType = '';
+  String selectedBodyShape= '';
+
   @override
   Widget build(BuildContext context){
     return Scaffold(
