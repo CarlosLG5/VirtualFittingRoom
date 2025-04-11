@@ -1,0 +1,2 @@
+/Users/carloslazcano/Documents/GitHub/VirtualFittingRoom/android/app/.cxx/Debug/1d6zm1j1/x86_64/CMakeFiles/edit_cache.dir
+/Users/carloslazcano/Documents/GitHub/VirtualFittingRoom/android/app/.cxx/Debug/1d6zm1j1/x86_64/CMakeFiles/rebuild_cache.dir
