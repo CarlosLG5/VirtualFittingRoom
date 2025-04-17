@@ -1,0 +1,26 @@
+Target dependency graph (11 targets)
+Target 'Pods-RunnerTests' in project 'Pods'
+➜ Explicit dependency on target 'Pods-Runner' in project 'Pods'
+Target 'Pods-Runner' in project 'Pods'
+➜ Explicit dependency on target 'Flutter' in project 'Pods'
+➜ Explicit dependency on target 'camera_avfoundation' in project 'Pods'
+➜ Explicit dependency on target 'image_picker_ios' in project 'Pods'
+➜ Explicit dependency on target 'path_provider_foundation' in project 'Pods'
+➜ Explicit dependency on target 'share_plus' in project 'Pods'
+Target 'share_plus' in project 'Pods'
+➜ Explicit dependency on target 'Flutter' in project 'Pods'
+➜ Explicit dependency on target 'share_plus-share_plus_privacy' in project 'Pods'
+Target 'share_plus-share_plus_privacy' in project 'Pods' (no dependencies)
+Target 'path_provider_foundation' in project 'Pods'
+➜ Explicit dependency on target 'Flutter' in project 'Pods'
+➜ Explicit dependency on target 'path_provider_foundation-path_provider_foundation_privacy' in project 'Pods'
+Target 'path_provider_foundation-path_provider_foundation_privacy' in project 'Pods' (no dependencies)
+Target 'image_picker_ios' in project 'Pods'
+➜ Explicit dependency on target 'Flutter' in project 'Pods'
+➜ Explicit dependency on target 'image_picker_ios-image_picker_ios_privacy' in project 'Pods'
+Target 'image_picker_ios-image_picker_ios_privacy' in project 'Pods' (no dependencies)
+Target 'camera_avfoundation' in project 'Pods'
+➜ Explicit dependency on target 'Flutter' in project 'Pods'
+➜ Explicit dependency on target 'camera_avfoundation-camera_avfoundation_privacy' in project 'Pods'
+Target 'camera_avfoundation-camera_avfoundation_privacy' in project 'Pods' (no dependencies)
+Target 'Flutter' in project 'Pods' (no dependencies)
