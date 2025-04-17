@@ -1,15 +1,16 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; //basic flutter package
 import 'contact.dart'; //imports our contact screen
 import 'package:image_picker/image_picker.dart'; //allows for use of images
 import 'dart:io'; //allows for input/output file use
 import 'dart:typed_data'; // Add this import for Float32List
-import 'package:camera/camera.dart';
-import 'package:image/image.dart' as img;
-import 'package:tflite_flutter/tflite_flutter.dart';
+import 'package:camera/camera.dart'; //camera use
+import 'package:image/image.dart' as img; //image use
+import 'package:tflite_flutter/tflite_flutter.dart'; //tflite use for model integration
 
+//for camera use
 late List<CameraDescription> _cameras;
 
-
+//create HomeScreen
 class HomeScreen extends StatefulWidget{
   const HomeScreen({Key? key}) : super(key : key);
 
@@ -18,6 +19,7 @@ class HomeScreen extends StatefulWidget{
 
 }  
 
+//Variables are initialized such as image, height, weight
 class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin{
   late TabController _tabController; //tab controller for switching windows
   final TextEditingController _heightController = TextEditingController(); //height input
@@ -30,6 +32,7 @@ String _suitSize=""; //store suit size
  Interpreter? _interpreter;
  bool _isModelLoaded = false;
 
+  //initial state, load tabcontroller and loadmodel
   @override
   void initState() {
     super.initState();
@@ -37,6 +40,11 @@ String _suitSize=""; //store suit size
     _loadModel();
   }
 
+  /*
+  This loads the model we have saved
+  Currently, the model is saved in the 'assets/VFRmodel.tflite' directory in the project files
+  Make sure you add the model path to assets in the pubspec.yaml
+  */
   Future<void> _loadModel() async {
     try {
       final modelPath = 'assets/VFRmodel.tflite';
@@ -50,6 +58,10 @@ String _suitSize=""; //store suit size
     }
   }
 
+  /*
+  This function encodes the BodyType variable as a numeric value once input
+  This allows it to be used easily later on for feature scaling
+  */
   int encodeBodyType(String bodyType) {
     const Map<String, int> bodyTypeMap = {
       'Skinny': 0,
@@ -60,6 +72,7 @@ String _suitSize=""; //store suit size
     return bodyTypeMap[bodyType] ?? -1;
   }
 
+  //same purpose as encodeBodyType, allows for easier use when feature scaling
   int encodeBodyShape(String bodyShape) {
     const Map<String, int> bodyShapeMap = {
       'Slim': 0,
@@ -70,25 +83,26 @@ String _suitSize=""; //store suit size
     return bodyShapeMap[bodyShape] ?? -1;
   }
 
+  //this extracts image features and turns the picture into numbers to work with
   Future<List<double>> extractImageFeatures(File? imageFile) async {
     if (imageFile == null) {
       return List<double>.filled(224 * 224 * 3, 0.0); // Return zeros if no image
     }
 
-    // Load and resize image to 224x224
+    //load and resize image to 224x224 (this size was determined by the expected input shape)
     img.Image image = img.decodeImage(await imageFile.readAsBytes())!;
     img.Image resized = img.copyResize(image, width: 224, height: 224);
 
-    // Create a buffer for the RGB values in the correct shape [1, 224, 224, 3]
+    //create a buffer for the RGB values in the correct shape [1, 224, 224, 3]
     List<double> imageFeatures = List<double>.filled(224 * 224 * 3, 0.0);
     int index = 0;
 
-    // Process each pixel
+    //process each pixel
     for (int y = 0; y < 224; y++) {
       for (int x = 0; x < 224; x++) {
         final pixel = resized.getPixel(x, y);
         
-        // Extract RGB values and normalize to [0,1]
+        //extract RGB values and normalize to [0,1]
         imageFeatures[index++] = img.getRed(pixel) / 255.0;   // R channel
         imageFeatures[index++] = img.getGreen(pixel) / 255.0; // G channel
         imageFeatures[index++] = img.getBlue(pixel) / 255.0;  // B channel
@@ -98,49 +112,45 @@ String _suitSize=""; //store suit size
     return imageFeatures;
   }
 
-  // Convert decimal prediction to suit size category
+  /*
+  The model outputs a decimal value
+  We must convert the decimal prediction to a proper suit size
+  This is our feature scaling
+  */
   String convertToSuitSize(double prediction, double height, double weight, String bodyType, String bodyShape) {
-    // Base scaling (20-60 range)
+    //base scaling (20-60, 60 based off of highest jacket size recorded in current dataset)
     final baseScaledPrediction = (prediction * 40.0) + 20.0;
     
-    // Adjust based on height and weight
-    final heightAdjustment = (height - 70.0) * 0.5; // Adjust by 0.5 size per inch above/below 70"
-    final weightAdjustment = (weight - 180.0) * 0.1; // Adjust by 0.1 size per pound above/below 180lbs
+    //adjust based on height and weight
+    final heightAdjustment = (height - 70.0) * 0.5; //adjust by 0.5 size per inch above/below 70"
+    final weightAdjustment = (weight - 180.0) * 0.1; //adjust by 0.1 size per pound above/below 180lbs
     
-    // Adjust based on body type
+    //adjust based on body type
     double bodyTypeAdjustment = 0.0;
     switch (bodyType) {
       case 'Skinny':
-        bodyTypeAdjustment = -1.0; // Smaller size for skinny body type
-        break;
+        bodyTypeAdjustment = -1.0; //smaller size for skinny body type
       case 'Average':
-        bodyTypeAdjustment = 0.0; // No adjustment for average
-        break;
+        bodyTypeAdjustment = 0.0; //no adjustment for average
       case 'Athletic':
-        bodyTypeAdjustment = 0.5; // Slightly larger for athletic build
-        break;
+        bodyTypeAdjustment = 0.5; //slightly larger for athletic build
       case 'Larger':
-        bodyTypeAdjustment = 1.5; // Larger size for larger body type
-        break;
+        bodyTypeAdjustment = 1.5; //larger size for larger body type
       default:
         bodyTypeAdjustment = 0.0;
     }
 
-    // Adjust based on body shape
+    //adjust based on body shape
     double bodyShapeAdjustment = 0.0;
     switch (bodyShape) {
       case 'Slim':
-        bodyShapeAdjustment = -0.5; // Smaller size for slim shape
-        break;
+        bodyShapeAdjustment = -0.5; //smaller size for slim shape
       case 'Small Chest/Large Waist':
-        bodyShapeAdjustment = 0.5; // Slightly larger for this shape
-        break;
+        bodyShapeAdjustment = 0.5; //slightly larger for this shape
       case 'Large Chest/Small Waist':
-        bodyShapeAdjustment = 0.0; // No adjustment needed
-        break;
+        bodyShapeAdjustment = 0.0; //no adjustment needed
       case 'Large Chest/Large Waist':
-        bodyShapeAdjustment = 1.0; // Larger size for this shape
-        break;
+        bodyShapeAdjustment = 1.0; //larger size for this shape
       default:
         bodyShapeAdjustment = 0.0;
     }
@@ -151,7 +161,7 @@ String _suitSize=""; //store suit size
                              bodyTypeAdjustment + 
                              bodyShapeAdjustment;
     
-    // Round to nearest whole number
+    //round to nearest whole number, can't have a decimal jacket size
     final roundedSize = adjustedPrediction.round();
     
     print('Raw prediction: $prediction');
@@ -163,6 +173,7 @@ String _suitSize=""; //store suit size
     print('Final adjusted prediction: $adjustedPrediction');
     print('Rounded size: $roundedSize');
 
+    //this attaches a letter to the number for the jacket size
     String sizeLetter;
     if (adjustedPrediction < 37) {
       sizeLetter = 'S';
@@ -174,38 +185,44 @@ String _suitSize=""; //store suit size
       sizeLetter = 'XL';
     }
 
+    //return the value of (size)(letter)
     return '$roundedSize$sizeLetter';
   }
 
+  /*
+  This is the function that gets called when the 'Enter Data' button is pressed
+  Gets all input variables
+  Gives us our output
+  */
   Future<String?> predictSize() async {
     if (!_isModelLoaded || _interpreter == null) {
       return 'Model not loaded';
     }
 
     try {
-      // Get model input and output details
+      //get model input and output details
       final inputTensor = _interpreter!.getInputTensor(0);
       final outputTensor = _interpreter!.getOutputTensor(0);
       print('Input shape: ${inputTensor.shape}');
       print('Output shape: ${outputTensor.shape}');
 
-      final double height = double.parse(_heightController.text);
-      final double weight = double.parse(_weightController.text);
-      final imageFeatures = await extractImageFeatures(_image);
+      final double height = double.parse(_heightController.text); //take the input text and save it as a double
+      final double weight = double.parse(_weightController.text); //take the input text and save it as a double
+      final imageFeatures = await extractImageFeatures(_image); //get workable numbers from the image
 
-      // Create input buffer with the correct shape [1, 224, 224, 3]
+      //create input buffer with the correct shape [1, 224, 224, 3]. This can change based on the model used
       final inputBuffer = Float32List.fromList(imageFeatures);
 
-      // Create output buffer
-      final outputBuffer = Float32List(1); // Output shape is [1, 1]
+      //create output buffer
+      final outputBuffer = Float32List(1); //output shape is [1, 1] with the current model. Can also change based on the model
 
-      // Run inference
+      //run the model
       _interpreter!.run(inputBuffer.buffer, outputBuffer.buffer);
 
-      // Process output
+      //process output
       final prediction = outputBuffer[0];
       
-      // Convert the prediction to a suit size category with all adjustments
+      //convert the prediction to a suit size category with all adjustments
       final suitSize = convertToSuitSize(prediction, height, weight, selectedBodyType, selectedBodyShape);
       return suitSize;
     } catch (e) {
@@ -289,7 +306,7 @@ String _suitSize=""; //store suit size
                 ),
               ),
 
-              // Body Type Selection Buttons
+              //body Type Selection Buttons
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: Column(
@@ -318,7 +335,7 @@ String _suitSize=""; //store suit size
                 ),
               ),
 
-              // Body Shape Selection Buttons
+              //body Shape Selection Buttons
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: Column(
@@ -409,7 +426,7 @@ String _suitSize=""; //store suit size
               ),
             ],
 
-            // When data is entered, display the results
+            //when data is entered, display the results
             if (_dataEntered) 
               Column(
                 children: [
@@ -435,8 +452,8 @@ String _suitSize=""; //store suit size
                   _image != null
                       ? Image.file(
                           _image!,
-                          width: 150, // Make image smaller
-                          height: 150, // Make image smaller
+                          width: 150, //make image smaller
+                          height: 150, //make image smaller
                           fit: BoxFit.cover,
                         )
                       : Text("No image selected", style: TextStyle(color: Colors.black)),
@@ -468,7 +485,7 @@ String _suitSize=""; //store suit size
       ),
     );
   }
-  // Buttons for body type
+  //buttons for body type
   String selectedBodyType = '';
   String selectedBodyShape= '';
 

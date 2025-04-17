@@ -18,11 +18,16 @@ class MyApp extends StatelessWidget {
   }
 }
 
+//SplashScreen is for the pop up of "Merian Brothers" when the app first loads
 class SplashScreen extends StatefulWidget {
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }
 
+/*
+This is where you can modify the duration of the splash text
+Change what screen you get routed to after the splash text is done (HomeScreen at the moment)
+*/
 class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
@@ -36,6 +41,12 @@ class _SplashScreenState extends State<SplashScreen> {
     );
   }
 
+  /*
+  This is where you can change the sizing of the image being used
+  You can also change the background color
+  The image being used currently is in 'assets/merian_logo.png' directory in the project files
+  Make sure you add the image path to the pubspec.yaml
+  */
   @override
   Widget build(BuildContext context) {
     return Scaffold(

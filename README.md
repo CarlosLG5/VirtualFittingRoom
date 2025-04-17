@@ -1,4 +1,4 @@
 # virtual_fitting_room
 
-VirtualFittingRoom.
+Virtual Fitting Room.
 
