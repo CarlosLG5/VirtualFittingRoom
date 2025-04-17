@@ -4,7 +4,7 @@ import 'package:url_launcher/url_launcher.dart'; //for url launching, change dep
 class ContactScreen extends StatelessWidget{
   const ContactScreen({super.key});
 
-  //this is used to launch the url if pressed. go into the AndroidManifest xml to add internet permissions
+  //this is used to launch the url if pressed. Permissions already added in the AndroidManifest xml
   void _launchURL(Uri url) async{
     if(await canLaunchUrl(url)){
       await launchUrl(url);
@@ -12,7 +12,12 @@ class ContactScreen extends StatelessWidget{
       throw 'Unable to launch $url';
     }
   }
-  
+  /*
+  Nothing too crazy happens in the contact.dart
+  Mainly formatting boxes and text
+  Handling a urlLauncher for an onTap detection
+  Image used can be found in 'assets' directory in project files
+  */
   Widget _buildContactBox({
     required IconData icon,
     required String title,
